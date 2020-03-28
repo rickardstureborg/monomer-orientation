@@ -8,6 +8,7 @@ dependencies:
   - pytorch>0.4
   - pip
   - jupyterlab
+  - flake8
   - pip:
     - torchvision==0.1.9
     - opencv-python
