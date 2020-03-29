@@ -5,11 +5,14 @@ channels:
 dependencies:
   - python
   - numpy>=1.16
+  - pandas
   - pytorch>0.4
   - pip
   - jupyterlab
   - flake8
   - pip:
+    - matplotlib
     - torchvision==0.1.9
     - opencv-python
-    - matplotlib
+    - sklearn
+    
