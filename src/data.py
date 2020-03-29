@@ -1,5 +1,5 @@
 # Data ingestion and configuration file ingestion
-from os import listdir
+from os import getcwd, listdir
 import configparser
 import cv2
 import pandas as pd
@@ -15,13 +15,26 @@ class Config:
 
 
 def parse_config(config_file):
+    """Parses the configuration file for information, adds each as
+    attribute in a Config class.
+
+    Arguments:
+        config_file {string} -- Path to the configuration file
+
+    Returns:
+        Config Obj -- Object containing all config information
+    """
     config = Config()
     parser = configparser.ConfigParser()
     parser.read(config_file)
 
     # Dataset configurations
-    config.data_path = parser.get("dataset", "data_path")
-    config.input_size = parser.get("dataset", "image_input_size")
+    config.data_path = getcwd() + '/' + parser.get("dataset", "data_path")
+    config.image_input_size = tuple([int(i) for i in parser.get("dataset", "image_input_size").split(',')])
+    config.validset_seed = int(parser.get("dataset", "validset_seed"))
+    config.testset_seed = int(parser.get("dataset", "testset_seed"))
+    config.percent_valid = float(parser.get("dataset", "percent_valid"))
+    config.percent_test = float(parser.get("dataset", "percent_test"))
 
     # CNN configurations
     config.filter_input_sizes = [int(x) for x in parser.get("cnn", "filter_input_sizes").split(",")]
@@ -34,7 +47,7 @@ def parse_config(config_file):
 
 
     # Training configurations
-    config.seed = int(parser.get("training", "seed"))
+    config.seed = int(parser.get("training", "train_seed"))
     config.training_batch_size = int(parser.get("training", "training_batch_size"))
     config.num_epochs = int(parser.get("training", "num_epochs"))
     config.learning_rate = float(parser.get("training", "learning_rate"))
@@ -44,6 +57,16 @@ def parse_config(config_file):
 
 
 def get_dataset(config):
+    """Retrieves dataset as formatted from simulated data in Matlab script,
+    extracts individual monomer training samples and their exact angle,
+    returns as train, test, and validation sets with corresponding labels.
+
+    Arguments:
+        config {Config Obj} -- Configuration information
+
+    Returns:
+        tuple, tuple, tuple -- Train, Valid, and Test sets (first item is images tensor, second is labels)
+    """
     # Get filepaths to dataset images
     IMAGE_PATH = config.data_path + 'Samples/'
     image_filenames = [i for i in listdir(IMAGE_PATH) if i[0] != '.']
