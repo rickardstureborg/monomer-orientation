@@ -45,7 +45,6 @@ def parse_config(config_file):
 
     # Fully connected configurations
 
-
     # Training configurations
     config.seed = int(parser.get("training", "train_seed"))
     config.training_batch_size = int(parser.get("training", "training_batch_size"))

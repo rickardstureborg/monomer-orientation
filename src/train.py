@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 
 def mean_angular_loss(prediction, target):
+    # legacy
     angular_dist = torch.abs(prediction - target)
     losses = torch.where((90 < angular_dist) & (angular_dist <= 180), 180 - angular_dist, angular_dist)
     return torch.mean(losses**2)
@@ -21,9 +22,8 @@ def train(config, X_train, y_train, X_valid, y_valid):
     cnn = models.Net(config)
     # Set up optimizer
     optimizer = optim.Adam(cnn.parameters(), lr=config.learning_rate)
-    #loss_function = mean_angular_loss(outputs, y_batch)
     loss_function = nn.MSELoss()
-    
+
     # Train
     history = []
     for epoch in tqdm(range(config.num_epochs)):

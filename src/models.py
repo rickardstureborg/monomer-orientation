@@ -34,10 +34,6 @@ class Net(nn.Module):
             self._num_conv_features = x[0].shape[0]*x[0].shape[1]*x[0].shape[2]
         return x
 
-    def bounded_angle(self, x):
-        x = x % 180.0
-        return torch.where((-90 < x) & (x < 90.0), x, (x - 180.0))
-
     def forward(self, x):
         # Run through convolution layers
         x = self.convs(x)
@@ -49,6 +45,4 @@ class Net(nn.Module):
         x = F.relu(self.fc2(x))
 
         x = self.fc3(x)  # linear to get regression result
-        # Output bounded to range [-90, 90]
-        #x = self.bounded_angle(x)
         return x
