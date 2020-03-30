@@ -70,6 +70,8 @@ def get_dataset(config):
     # Get filepaths to dataset images
     IMAGE_PATH = config.data_path + 'Samples/'
     image_filenames = [i for i in listdir(IMAGE_PATH) if i[0] != '.']
+    # sort filenames
+    image_filenames = sorted(image_filenames, key=lambda x: int(x.split('_')[-1][:-4]))
 
     # Import image data in greyscale
     image_data = []
@@ -79,13 +81,14 @@ def get_dataset(config):
     # Import bounding boxes, add index to table
     df_labels = pd.read_csv(config.data_path + 'BoundingBoxes.csv')
     df_labels['x_index'] = df_labels[['Path_Source']].applymap(lambda x: int(x.split('_')[-1][:-4])-1)
+    df_labels['theta'] = df_labels['theta'].apply(lambda x: (x + 90) / 180)  # min-max normalize angles to [0,1]
 
     # Crop each individual monomer into its own image
     monomers = []
     labels = []
     for index, row in df_labels.iterrows():  # for every monomer in labels
         # get bounding box values
-        x = row['Y']
+        x = row['Y']  # swapped in dataset
         x_end = x+row['w']
         y = row['X']
         y_end = y+row['h']
@@ -97,8 +100,8 @@ def get_dataset(config):
         # append data and label
         monomers.append(padded)
         labels.append(row['theta'])
-    monomers = torch.tensor(monomers)
-    labels = torch.tensor(labels)
+    monomers = torch.Tensor(monomers)
+    labels = torch.Tensor(labels)
 
     # Split into train, validation, and test sets
     X_temp, X_test, y_temp, y_test = train_test_split(monomers, labels,
