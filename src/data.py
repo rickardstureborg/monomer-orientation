@@ -6,11 +6,12 @@ import pandas as pd
 import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
+import pickle
 
 
 class Config:
     """Class to hold the configuration file information"""
-    def __init__(self,):
+    def __init__(self):
         pass
 
 
@@ -46,7 +47,6 @@ def parse_config(config_file):
     # Fully connected configurations
 
     # Training configurations
-    config.seed = int(parser.get("training", "train_seed"))
     config.training_batch_size = int(parser.get("training", "training_batch_size"))
     config.num_epochs = int(parser.get("training", "num_epochs"))
     config.learning_rate = float(parser.get("training", "learning_rate"))
@@ -55,7 +55,7 @@ def parse_config(config_file):
     return config
 
 
-def get_dataset(config):
+def get_dataset(config, rebuild=False):
     """Retrieves dataset as formatted from simulated data in Matlab script,
     extracts individual monomer training samples and their exact angle,
     returns as train, test, and validation sets with corresponding labels.
@@ -63,9 +63,19 @@ def get_dataset(config):
     Arguments:
         config {Config Obj} -- Configuration information
 
+    Keyword Arguments:
+        rebuild {bool} -- Decides if dataset should be rebuilt (True) or loaded (default: {False})
+
     Returns:
-        tuple, tuple, tuple -- Train, Valid, and Test sets (first item is images tensor, second is labels)
+        tuple, tuple, tuple -- Train, Valid, and Test sets
+                               In each tuple, tuple[0] is images tensors and tuple[1] is labels
     """
+
+    if not rebuild:
+        # Load previous build
+        dataset = pickle.load(open("dataset_build.p", "rb"))
+        return dataset[0], dataset[1], dataset[2]
+
     # Get filepaths to dataset images
     IMAGE_PATH = config.data_path + 'Samples/'
     image_filenames = [i for i in listdir(IMAGE_PATH) if i[0] != '.']
@@ -114,4 +124,8 @@ def get_dataset(config):
     validset = X_valid, y_valid
     testset = X_test, y_test
 
+    # Save build as binary in data path
+    dataset = trainset, validset, testset
+    pickle.dump(dataset, open(config.data_path+"dataset_build.p", "wb"))
+    
     return trainset, validset, testset
