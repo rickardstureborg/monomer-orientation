@@ -16,4 +16,3 @@ dependencies:
     - torchvision==0.1.9
     - opencv-python
     - sklearn
-    
