@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import math
 
 
 class Net(nn.Module):
@@ -23,6 +24,16 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(200, 50)
         self.dropout2 = nn.Dropout(0.2)
         self.fc3 = nn.Linear(50, 1)
+
+    def MeanCosineLoss(self, outputs, targets):
+        # Convert normalized angle into radians
+        outputs = (outputs-0.5) / math.pi
+        targets = (targets-0.5) / math.pi
+        # Compute absolute angular differences
+        angular_diff = torch.abs(outputs - targets)
+        # Compute cosine loss
+        loss = torch.abs(torch.cos(angular_diff))
+        return torch.mean(loss)  # return mean loss
 
     def convs(self, x):
         x = F.relu(self.conv1(x))

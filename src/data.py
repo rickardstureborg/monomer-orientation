@@ -6,11 +6,12 @@ import pandas as pd
 import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
+import pickle
 
 
 class Config:
     """Class to hold the configuration file information"""
-    def __init__(self,):
+    def __init__(self):
         pass
 
 
@@ -24,12 +25,15 @@ def parse_config(config_file):
     Returns:
         Config Obj -- Object containing all config information
     """
+    PATH = getcwd() + '/'
+    if PATH[-4] != 'src/':
+        PATH += 'src/'
     config = Config()
     parser = configparser.ConfigParser()
     parser.read(config_file)
 
     # Dataset configurations
-    config.data_path = getcwd() + '/' + parser.get("dataset", "data_path")
+    config.data_path = PATH + parser.get("dataset", "data_path")
     config.image_input_size = tuple([int(i) for i in parser.get("dataset", "image_input_size").split(',')])
     config.validset_seed = int(parser.get("dataset", "validset_seed"))
     config.testset_seed = int(parser.get("dataset", "testset_seed"))
@@ -37,25 +41,25 @@ def parse_config(config_file):
     config.percent_test = float(parser.get("dataset", "percent_test"))
 
     # CNN configurations
-    config.filter_input_sizes = [int(x) for x in parser.get("cnn", "filter_input_sizes").split(",")]
-    config.filter_output_sizes = [int(x) for x in parser.get("cnn", "filter_output_sizes").split(",")]
-    config.kernel_sizes = [int(x) for x in parser.get("cnn", "kernel_sizes").split(",")]
-    config.strides = [int(x) for x in parser.get("cnn", "strides").split(",")]
-    config.pool_kernel_sizes = [int(x) for x in parser.get("cnn", "pool_kernel_sizes").split(",")]
+    config.filter_input_sizes = [int(i) for i in parser.get("cnn", "filter_input_sizes").split(",")]
+    config.filter_output_sizes = [int(i) for i in parser.get("cnn", "filter_output_sizes").split(",")]
+    config.kernel_sizes = [int(i) for i in parser.get("cnn", "kernel_sizes").split(",")]
+    config.strides = [int(i) for i in parser.get("cnn", "strides").split(",")]
+    config.pool_kernel_sizes = [int(i) for i in parser.get("cnn", "pool_kernel_sizes").split(",")]
 
     # Fully connected configurations
 
     # Training configurations
-    config.seed = int(parser.get("training", "train_seed"))
     config.training_batch_size = int(parser.get("training", "training_batch_size"))
     config.num_epochs = int(parser.get("training", "num_epochs"))
     config.learning_rate = float(parser.get("training", "learning_rate"))
-    config.save_path = parser.get("training", "save_path")
+    config.model_path = parser.get("training", "model_path")
+    config.loss_function = parser.get("training", "loss_function")
 
     return config
 
 
-def get_dataset(config):
+def get_dataset(config, rebuild=False):
     """Retrieves dataset as formatted from simulated data in Matlab script,
     extracts individual monomer training samples and their exact angle,
     returns as train, test, and validation sets with corresponding labels.
@@ -63,9 +67,19 @@ def get_dataset(config):
     Arguments:
         config {Config Obj} -- Configuration information
 
+    Keyword Arguments:
+        rebuild {bool} -- Decides if dataset should be rebuilt (True) or loaded (default: {False})
+
     Returns:
-        tuple, tuple, tuple -- Train, Valid, and Test sets (first item is images tensor, second is labels)
+        tuple, tuple, tuple -- Train, Valid, and Test sets
+                               In each tuple, tuple[0] is images tensors and tuple[1] is labels
     """
+
+    if not rebuild:
+        # Load previous build
+        dataset = pickle.load(open(config.data_path+"dataset_build.p", "rb"))
+        return dataset[0], dataset[1], dataset[2]
+
     # Get filepaths to dataset images
     IMAGE_PATH = config.data_path + 'Samples/'
     image_filenames = [i for i in listdir(IMAGE_PATH) if i[0] != '.']
@@ -113,5 +127,9 @@ def get_dataset(config):
     trainset = X_train, y_train
     validset = X_valid, y_valid
     testset = X_test, y_test
+
+    # Save build as binary in data path
+    dataset = trainset, validset, testset
+    pickle.dump(dataset, open(config.data_path+"dataset_build.p", "wb"))
 
     return trainset, validset, testset
