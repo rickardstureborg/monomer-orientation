@@ -127,5 +127,5 @@ def get_dataset(config, rebuild=False):
     # Save build as binary in data path
     dataset = trainset, validset, testset
     pickle.dump(dataset, open(config.data_path+"dataset_build.p", "wb"))
-    
+
     return trainset, validset, testset
