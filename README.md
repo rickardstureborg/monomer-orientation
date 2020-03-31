@@ -8,6 +8,9 @@ Create the environment:
 Update the Environment:
 `conda env update --name monomer --file environment.yml --prune`
 
+## Data Format
+
+
 ## Train Model
 `python src/train.py --rebuild --save --plot`
 - `--rebuild` flag forces dataset to be rebuilt. Use if first time running or if changes have been made to `src/data.py`
