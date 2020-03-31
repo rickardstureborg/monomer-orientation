@@ -16,7 +16,7 @@ class Trainer():
         self.model = model
         self.image_size = config.image_input_size
         self.batch_size = config.training_batch_size
-
+        self.lr = config.learning_rate
         self.epochs = config.num_epochs
         self.cur_epoch = 0
         self.validation_frequency = 100  # compute validation loss every Nth training batch
@@ -59,12 +59,11 @@ class Trainer():
                 loss = self.run_batch(X_batch, y_batch, train=True)
 
                 # Append (batch number, loss value)
-                train_history.append((i/self.batch_size, loss))
-                # Test on validation set
                 if i % (self.validation_frequency * self.batch_size) == 0:
+                    train_history.append((((i+epoch*len(X_train))/self.batch_size), loss))
+                    # Test on validation set
                     val_loss = self.run_batch(X_valid.view((-1, 1)+self.image_size), y_valid.view(-1, 1))
-
-                    valid_history.append((i/self.batch_size, val_loss))
+                    valid_history.append((((i+epoch*len(X_train))/self.batch_size), val_loss))
 
         return train_history, valid_history
 
