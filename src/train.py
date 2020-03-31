@@ -2,12 +2,10 @@ import argparse
 from os import getcwd
 import data
 import models
-import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-import math
 from time import time
 import pickle
 
@@ -18,7 +16,7 @@ class Trainer():
         self.model = model
         self.image_size = config.image_input_size
         self.batch_size = config.training_batch_size
-        self.lr = config.learning_rate
+
         self.epochs = config.num_epochs
         self.cur_epoch = 0
         self.validation_frequency = 100  # compute validation loss every Nth training batch
