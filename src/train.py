@@ -16,12 +16,10 @@ class Trainer():
     def __init__(self, model, config):
         """ Initialize trainer class """
         self.model = model
-        self.lr = config.learning_rate
         self.image_size = config.image_input_size
         self.batch_size = config.training_batch_size
+        self.lr = config.learning_rate
         self.epochs = config.num_epochs
-        self.save_path = config.save_path
-        self.save_path = config.save_path
         self.cur_epoch = 0
         self.validation_frequency = 100  # compute validation loss every Nth training batch
         # Adam optimizer
