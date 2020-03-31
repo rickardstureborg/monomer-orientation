@@ -25,12 +25,15 @@ def parse_config(config_file):
     Returns:
         Config Obj -- Object containing all config information
     """
+    PATH = getcwd() + '/'
+    if PATH[-4] != 'src/':
+        PATH += 'src/'
     config = Config()
     parser = configparser.ConfigParser()
     parser.read(config_file)
 
     # Dataset configurations
-    config.data_path = getcwd() + '/' + parser.get("dataset", "data_path")
+    config.data_path = PATH + parser.get("dataset", "data_path")
     config.image_input_size = tuple([int(i) for i in parser.get("dataset", "image_input_size").split(',')])
     config.validset_seed = int(parser.get("dataset", "validset_seed"))
     config.testset_seed = int(parser.get("dataset", "testset_seed"))
@@ -38,11 +41,11 @@ def parse_config(config_file):
     config.percent_test = float(parser.get("dataset", "percent_test"))
 
     # CNN configurations
-    config.filter_input_sizes = [int(x) for x in parser.get("cnn", "filter_input_sizes").split(",")]
-    config.filter_output_sizes = [int(x) for x in parser.get("cnn", "filter_output_sizes").split(",")]
-    config.kernel_sizes = [int(x) for x in parser.get("cnn", "kernel_sizes").split(",")]
-    config.strides = [int(x) for x in parser.get("cnn", "strides").split(",")]
-    config.pool_kernel_sizes = [int(x) for x in parser.get("cnn", "pool_kernel_sizes").split(",")]
+    config.filter_input_sizes = [int(i) for i in parser.get("cnn", "filter_input_sizes").split(",")]
+    config.filter_output_sizes = [int(i) for i in parser.get("cnn", "filter_output_sizes").split(",")]
+    config.kernel_sizes = [int(i) for i in parser.get("cnn", "kernel_sizes").split(",")]
+    config.strides = [int(i) for i in parser.get("cnn", "strides").split(",")]
+    config.pool_kernel_sizes = [int(i) for i in parser.get("cnn", "pool_kernel_sizes").split(",")]
 
     # Fully connected configurations
 
@@ -50,7 +53,8 @@ def parse_config(config_file):
     config.training_batch_size = int(parser.get("training", "training_batch_size"))
     config.num_epochs = int(parser.get("training", "num_epochs"))
     config.learning_rate = float(parser.get("training", "learning_rate"))
-    config.save_path = parser.get("training", "save_path")
+    config.model_path = parser.get("training", "model_path")
+    config.loss_function = parser.get("training", "loss_function")
 
     return config
 
@@ -73,7 +77,7 @@ def get_dataset(config, rebuild=False):
 
     if not rebuild:
         # Load previous build
-        dataset = pickle.load(open("dataset_build.p", "rb"))
+        dataset = pickle.load(open(config.data_path+"dataset_build.p", "rb"))
         return dataset[0], dataset[1], dataset[2]
 
     # Get filepaths to dataset images
