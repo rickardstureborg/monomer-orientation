@@ -5,10 +5,10 @@ channels:
 dependencies:
   - python
   - flake8
-  - tqdm
   - numpy>=1.16
   - pandas
   - pytorch>0.4
+  - tqdm
   - pip
   - jupyterlab
   - pip:
@@ -16,3 +16,4 @@ dependencies:
     - torchvision==0.1.9
     - opencv-python
     - sklearn
+    - math
