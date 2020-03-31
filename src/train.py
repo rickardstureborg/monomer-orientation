@@ -7,12 +7,12 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-import math.pi as PI
+import math
 from time import time
 import pickle
 
 
-class trainer():
+class Trainer():
     def __init__(self, model, config):
         """ Initialize trainer class """
         self.model = model
@@ -23,24 +23,14 @@ class trainer():
         self.save_path = config.save_path
         self.save_path = config.save_path
         self.cur_epoch = 0
-        self.validation_frequency = 100  # every 100th training batch
+        self.validation_frequency = 100  # compute validation loss every Nth training batch
         # Adam optimizer
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         # Loss function
         if config.loss_function == 'MSELoss':
             self.loss_func = nn.MSELoss()
-        elif config.loss_function == 'Cosine Loss':
-            self.loss_func = self.mean_cosine_loss
-
-    def mean_cosine_loss(outputs, targets):
-        # Convert normalized angle into radians
-        outputs = (outputs-0.5) / PI
-        targets = (targets-0.5) / PI
-        # Compute absolute angular differences
-        angular_diff = torch.abs(outputs - targets)
-        # Compute cosine loss
-        loss = torch.abs(torch.cos(angular_diff))
-        return torch.mean(loss)  # return mean loss
+        elif config.loss_function == 'MeanCosineLoss':
+            self.loss_func = self.model.MeanCosineLoss
 
     def run_batch(self, batch, targets, train=False):
 
@@ -57,7 +47,6 @@ class trainer():
         if train:
             loss.backward()  # compute gradient
             self.optimizer.step()  # change model weights
-
         return loss
 
     def train(self, config, X_train, y_train, X_valid, y_valid):
@@ -69,19 +58,34 @@ class trainer():
             for i in range(0, len(X_train), self.batch_size):
                 # Get one batch from data
                 X_batch = X_train[i:i+self.batch_size].view((-1, 1)+self.image_size)
-                y_batch = y_train[i:i+self.batch_size]
+                y_batch = y_train[i:i+self.batch_size].view((-1, 1))
                 # Run batch
                 loss = self.run_batch(X_batch, y_batch, train=True)
+
                 # Append (batch number, loss value)
                 train_history.append((i/self.batch_size, loss))
+                # Test on validation set
+                if i % (self.validation_frequency * self.batch_size) == 0:
+                    val_loss = self.run_batch(X_valid.view((-1, 1)+self.image_size), y_valid.view(-1, 1))
 
-            # Test on validation set
-            if i % (self.validation_frequency * self.batch_size) == 0:
-                loss = self.run_batch(X_valid.view((-1, 1)+self.image_size), y_valid.view(-1, 1))
-
-                valid_history.append((i/self.batch_size, loss))
+                    valid_history.append((i/self.batch_size, val_loss))
 
         return train_history, valid_history
+
+    def plot_loss(self, config, train_history, valid_history):
+        # Training Loss
+        batch_num_train = [i[0] for i in train_history]
+        loss_train = [i[1] for i in train_history]
+        plt.plot(batch_num_train, loss_train, color='blue', label='Training')
+        # Validation Loss
+        batch_num_valid = [i[0] for i in valid_history]
+        loss_valid = [i[1] for i in valid_history]
+        plt.plot(batch_num_valid, loss_valid, color='orange', label='Validation')
+        # Labels
+        plt.title('Training and Validation Loss')
+        plt.xlabel('Batch Number')
+        plt.ylabel(f'Loss ({config.loss_function})')
+        plt.show()
 
 
 if __name__ == "__main__":
@@ -97,7 +101,7 @@ if __name__ == "__main__":
     save_flag = args.save  # if model should be saved as file
 
     # Get configs and dataset
-    PATH = getcwd() + '/'
+    PATH = getcwd() + '/src/'
     config = data.parse_config(PATH + 'config.cfg')
     trainset, validset, testset = data.get_dataset(config, rebuild=rebuild_flag)
     # Initialize model
@@ -109,14 +113,17 @@ if __name__ == "__main__":
     y_valid = validset[1]
 
     # Run training script
-    trainer = trainer(cnn, config)
-    history = trainer.train(config, X_train, y_train, X_valid, y_valid)
+    trainer = Trainer(cnn, config)
+    train_history, valid_history = trainer.train(config, X_train, y_train, X_valid, y_valid)
 
     # Save model
     if save_flag:
-        model_name = f"model-{int(time())}"
+        version = str(int(time()))
+        model_name = 'model-'+version+'.p'
         pickle.dump(cnn, open(PATH + config.model_path + model_name, "wb"))
+        config_name = 'model-'+version+'_configs.p'
+        pickle.dump(config, open(PATH + config.model_path + config_name, "wb"))
 
     # Plot loss
-    plt.plot(history)
-    plt.show()
+    if plot_flag:
+        trainer.plot_loss(config, train_history, valid_history)
