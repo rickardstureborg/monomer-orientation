@@ -39,16 +39,19 @@ def parse_config(config_file):
     config.testset_seed = int(parser.get("dataset", "testset_seed"))
     config.percent_valid = float(parser.get("dataset", "percent_valid"))
     config.percent_test = float(parser.get("dataset", "percent_test"))
-
     # CNN configurations
-    config.filter_input_sizes = [int(i) for i in parser.get("cnn", "filter_input_sizes").split(",")]
-    config.filter_output_sizes = [int(i) for i in parser.get("cnn", "filter_output_sizes").split(",")]
+    config.num_conv_layers = int(parser.get("cnn", "num_conv_layers"))
+    config.cnn_features = [1] + [int(i) for i in parser.get("cnn", "cnn_features").split(",")]
     config.kernel_sizes = [int(i) for i in parser.get("cnn", "kernel_sizes").split(",")]
-    config.strides = [int(i) for i in parser.get("cnn", "strides").split(",")]
-    config.pool_kernel_sizes = [int(i) for i in parser.get("cnn", "pool_kernel_sizes").split(",")]
-
+    config.cnn_stride = int(parser.get("cnn", "cnn_stride"))
+    # Pooling layer configurations
+    config.pool_layer = bool(parser.get("pool", "pool_layer"))
+    config.pool_size = int(parser.get("pool", "pool_size"))
+    config.pool_stride = int(parser.get("pool", "pool_stride"))
     # Fully connected configurations
-
+    config.num_fc_layers = int(parser.get("fc", "num_fc_layers"))
+    config.fc_features = [int(i) for i in parser.get("fc", "fc_features").split(",")]
+    config.dropout_probs = [float(i) for i in parser.get("fc", "dropout_probs").split(",")]
     # Training configurations
     config.training_batch_size = int(parser.get("training", "training_batch_size"))
     config.num_epochs = int(parser.get("training", "num_epochs"))
